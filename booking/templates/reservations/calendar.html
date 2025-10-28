@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if notifications %}
+<div class="notification-overlay" id="notificationOverlay">
+  <div class="notification-modal">
+    <h2>Atención</h2>
+    <div class="notification-messages">
+      {% for note in notifications %}
+        <p>{{ note.message|linebreaksbr }}</p>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn btn-primary" id="notificationDismiss">Entendido</button>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var dismiss = document.getElementById('notificationDismiss');
+    var overlay = document.getElementById('notificationOverlay');
+    if (dismiss && overlay) {
+      dismiss.addEventListener('click', function () {
+        overlay.style.display = 'none';
+      });
+    }
+  });
+</script>
+{% endif %}
+
+<div class="admin-container">
+  <div class="header-section">
+    <h2>Vista mensual</h2>
+    <div class="reservation-header-actions">
+      <div class="view-switch">
+        <a href="{% url 'reservation_monthly' %}" class="reservation-action {% if active_view == 'calendar' %}is-active{% endif %}">Vista mensual</a>
+        <a href="{% url 'reservation_list' %}" class="reservation-action {% if active_view == 'history' %}is-active{% endif %}">Historial de reserva</a>
+      </div>
+      {% if user.is_authenticated %}
+        <a href="/reservas/nueva/" class="reservation-action reservation-action--primary">Nueva reserva</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="calendar-controls">
+    <a class="btn btn-ghost" href="{% url 'reservation_monthly' %}?year={{ prev_year }}&month={{ prev_month }}">Mes anterior</a>
+    <div class="calendar-current">{{ month_label }}</div>
+    <a class="btn btn-ghost" href="{% url 'reservation_monthly' %}?year={{ next_year }}&month={{ next_month }}">Mes siguiente</a>
+  </div>
+
+  <div class="calendar-wrapper">
+    <div class="calendar-grid">
+    {% for name in weekday_names %}
+      <div class="calendar-header-cell">{{ name }}</div>
+    {% endfor %}
+
+    {% for week in weeks %}
+      {% for day in week %}
+        <div class="calendar-cell{% if not day.in_month %} is-outside{% endif %}{% if day.is_today %} is-today{% endif %}{% if day.is_weekend %} is-weekend{% endif %}{% if day.is_full_day_block %} is-full-block{% endif %}" data-weekday="{{ day.weekday_label }}">
+          <div class="day-number">{{ day.date|date:"j" }}</div>
+          <div class="day-content">
+            {% if day.is_full_day_block %}
+              <div class="day-full-block">
+                {% for blackout in day.full_block_blackouts %}
+                  {% with reason=blackout.reason|default_if_none:'' %}
+                    {% if reason|slice:":10" != "Reserva de" %}
+                      <div class="full-block-chip">
+                        <div class="chip-title">Bloqueo</div>
+                        {% if blackout.scope and blackout.scope != blackout.reason %}
+                          <div class="chip-subtitle">{{ blackout.scope }}</div>
+                        {% endif %}
+                        {% if blackout.time_label %}
+                          <div class="chip-subtitle">{{ blackout.time_label }}</div>
+                        {% endif %}
+                        {% if blackout.reason %}
+                          <div class="chip-reason">{{ blackout.reason }}</div>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                {% endfor %}
+              </div>
+            {% else %}
+              {% if day.blackouts %}
+                <div class="day-blackouts">
+                  {% for blackout in day.blackouts %}
+                    {% with reason=blackout.reason|default_if_none:'' %}
+                      {% if reason|slice:":10" != "Reserva de" %}
+                        <div class="blackout-chip">
+                          <div class="chip-title">Bloqueo</div>
+                          {% if blackout.scope %}
+                            <div class="chip-subtitle">{{ blackout.scope }}</div>
+                          {% endif %}
+                          {% if blackout.time_label %}
+                            <div class="chip-subtitle">{{ blackout.time_label }}</div>
+                          {% endif %}
+                          {% if blackout.reason %}
+                            <div class="chip-reason">{{ blackout.reason }}</div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              {% if day.has_schedule %}
+                <div class="day-schedule" data-day="{{ day.date|date:'Y-m-d' }}">
+                  <div class="schedule-room-switch">
+                    {% for schedule in day.room_schedules %}
+                      <button type="button" class="room-switch-btn room-switch-btn--{{ schedule.room.code|lower }}{% if forloop.first %} is-active{% endif %}" data-room="{{ schedule.room.code }}">Salón {{ schedule.room.code }}</button>
+                    {% endfor %}
+                  </div>
+                  <div class="room-schedule-container">
+                    {% for schedule in day.room_schedules %}
+                      <div class="room-schedule-panel{% if forloop.first %} is-active{% endif %}" data-room="{{ schedule.room.code }}">
+                        {% for block in schedule.blocks %}
+                          <div class="schedule-row room-schedule-row room-schedule-row--{{ schedule.room.code|lower }} {% if block.status == 'reserved' %}is-reserved{% else %}is-available{% endif %}">
+                            <div class="schedule-row-info">
+                              <span class="block-label">{{ block.label }}</span>
+                              <span class="block-time">{{ block.time_label }}</span>
+                            </div>
+                            {% if block.status == 'reserved' and block.reservation %}
+                              <div class="schedule-row-reservation">
+                                <span class="cell-title">{{ block.reservation.teacher }}</span>
+                                {% if block.reservation.course %}
+                                  <span class="cell-subtitle">{{ block.reservation.course }}</span>
+                                {% endif %}
+                                {% if block.reservation.subject %}
+                                  <span class="cell-subtitle">{{ block.reservation.subject }}</span>
+                                {% endif %}
+                              </div>
+                            {% else %}
+                              <div class="schedule-row-reservation">
+                                <span class="cell-title">Disponible</span>
+                              </div>
+                            {% endif %}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% else %}
+                {% if not day.blackouts %}
+                  <div class="schedule-empty">Sin reservas ni bloques programados.</div>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+</div>
+  </div>
+
+  {% if is_admin %}
+    <div class="navigation-section">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Volver al inicio</a>
+    </div>
+  {% endif %}
+</div>
+<script>
+  document.addEventListener('click', function (event) {
+    if (!event.target.classList.contains('room-switch-btn')) {
+      return;
+    }
+    const button = event.target;
+    const scheduleWrapper = button.closest('.day-schedule');
+    if (!scheduleWrapper) {
+      return;
+    }
+    const roomCode = button.dataset.room;
+    scheduleWrapper.querySelectorAll('.room-switch-btn').forEach(function (btn) {
+      btn.classList.toggle('is-active', btn === button);
+    });
+    scheduleWrapper.querySelectorAll('.room-schedule-panel').forEach(function (panel) {
+      panel.classList.toggle('is-active', panel.dataset.room === roomCode);
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .schedule-row {
+        /* Asegura que el flexbox no intente justificar el espacio,
+           permitiendo que los hijos se ajusten a su tamaño definido. */
+        justify-content: flex-start !important;
+        box-sizing: border-box !important; /* Asegura que el ancho 100% incluya padding/border y no desborde. */
+      }
+      .schedule-row-info {
+        /* Fija el ancho de la sección de la hora para que no se encoja ni se estire. */
+        flex: 0 0 auto !important;
+       margin-right: 0.5rem !important; /* Espacio consistente a la derecha de la hora */
+        /* Anulamos reglas conflictivas del CSS original */
+        flex-basis: auto !important;
+        margin-left: 0 !important;
+      }
+      .schedule-row-reservation {
+        /* Permite que esta sección crezca para ocupar el espacio sobrante
+           y se encoja si es necesario, evitando que se desborde. */
+        flex: 1 1 0 !important;
+        min-width: 0; /* CRUCIAL: Permite que el texto se trunque en un contenedor flex. */
+        text-align: left !important; /* Alinea el texto a la izquierda para un mejor truncamiento */
+        align-items: flex-start !important;
+      }
+      .room-schedule-panel .schedule-row.is-reserved .cell-title,
+      .room-schedule-panel .schedule-row.is-reserved .cell-subtitle {
+        display: block !important; /* Asegura que se apilen verticalmente */
+        white-space: nowrap !important; /* Mantiene el texto en una sola línea */
+        overflow: hidden !important; /* Oculta el texto que se desborda */
+        text-overflow: ellipsis !important; /* Añade '...' al final del texto cortado */
+      }
+    `;
+    document.head.appendChild(style);
+  });
+</script>
+{% endblock %}

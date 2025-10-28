@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}register-page{% endblock %}
+
+{% block content %}
+<style>
+  body.register-page main {
+    max-width: none;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .register-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .register-card {
+    width: min(720px, 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
+    border-radius: 28px;
+    border-left: 6px solid #27afae;
+    box-shadow: 0 30px 70px rgba(9, 63, 117, 0.16);
+    padding: 2.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .register-header h1 {
+    margin: 0;
+    font-size: clamp(1.9rem, 3.2vw, 2.3rem);
+    font-weight: 700;
+    color: #093f75;
+  }
+
+  .register-header p {
+    margin: 0.6rem 0 0;
+    font-size: 0.98rem;
+    color: rgba(73, 80, 87, 0.85);
+  }
+
+  .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .register-section {
+    border: 1px solid rgba(9, 63, 117, 0.12);
+    border-radius: 18px;
+    padding: 1.45rem 1.65rem 1.6rem;
+    background: linear-gradient(180deg, #ffffff 0%, rgba(39, 175, 174, 0.08) 130%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .register-section legend {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #093f75;
+    padding: 0 0.4rem;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem 1.3rem;
+    margin-top: 1rem;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .form-field label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #495057;
+  }
+
+  .form-field input,
+  .form-field select {
+    appearance: none;
+    padding: 0.7rem 0.85rem;
+    border-radius: 14px;
+    border: 1.6px solid rgba(9, 63, 117, 0.18);
+    background: #ffffff;
+    font-size: 0.96rem;
+    color: #2c3e50;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-field select[multiple] {
+    min-height: 160px;
+  }
+
+  .form-field input:focus,
+  .form-field select:focus {
+    outline: none;
+    border-color: #27afae;
+    box-shadow: 0 0 0 4px rgba(39, 175, 174, 0.2);
+  }
+
+  .form-field select option:checked {
+    background: #27afae !important;
+    color: #ffffff !important;
+  }
+
+  .form-grid--secure {
+    justify-content: flex-start;
+    column-gap: 2rem;
+  }
+
+  .form-grid--secure .form-field {
+    max-width: 280px;
+    width: 100%;
+  }
+
+  .form-grid--secure .password-input input {
+    flex: 0 0 230px;
+    max-width: 230px;
+  }
+
+  .password-input {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .password-input input {
+    flex: 1;
+    width: auto;
+  }
+
+  .password-input input.password-visible {
+    -webkit-text-security: none !important;
+    font-family: inherit;
+    letter-spacing: normal;
+  }
+
+  .password-toggle {
+    border: none;
+    background: rgba(39, 175, 174, 0.12);
+    padding: 0.35rem 0.45rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    color: rgba(9, 63, 117, 0.6);
+    transition: color 0.2s ease, background-color 0.2s ease;
+    border-radius: 999px;
+  }
+
+  .password-toggle svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    pointer-events: none;
+  }
+
+  .password-toggle__slash {
+    display: none;
+    stroke-width: 1.6;
+  }
+
+  .password-toggle.is-visible .password-toggle__slash {
+    display: block;
+  }
+
+  .password-toggle.is-visible .password-toggle__pupil {
+    opacity: 0.35;
+  }
+
+  .password-toggle:hover,
+  .password-toggle:focus-visible {
+    color: rgba(9, 63, 117, 0.95);
+    background: rgba(39, 175, 174, 0.22);
+    outline: none;
+  }
+
+  .password-toggle:focus-visible {
+    box-shadow: 0 0 0 3px rgba(39, 175, 174, 0.28);
+  }
+
+  .help-text {
+    font-size: 0.82rem;
+    color: rgba(73, 80, 87, 0.7);
+  }
+
+  .error-messages {
+    margin-top: 0.35rem;
+  }
+
+  .error {
+    color: #d6336c;
+    font-size: 0.85rem;
+    margin: 0.1rem 0;
+  }
+
+  .register-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    margin-top: 0.5rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .register-actions button {
+    border: none;
+    cursor: pointer;
+    border-radius: 16px;
+    font-weight: 600;
+    padding: 1.05rem 4.5rem;
+    font-size: 1.08rem;
+    background: linear-gradient(114deg, #093f75 0%, #27afae 100%);
+    color: #ffffff;
+    box-shadow: 0 30px 48px rgba(9, 63, 117, 0.26);
+    transition: transform 0.15s ease, filter 0.2s ease;
+  }
+
+  .register-actions button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+
+  .login-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.92rem;
+    color: rgba(73, 80, 87, 0.9);
+    flex-wrap: wrap;
+  }
+
+  .login-row .login-label {
+    font-weight: 500;
+  }
+
+  .login-row .login-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.78rem 1.8rem;
+    border-radius: 16px;
+    background: #27afae;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 20px 34px rgba(39, 175, 174, 0.28);
+    transition: transform 0.15s ease, filter 0.2s ease;
+  }
+
+  .login-row .login-link:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+
+  @media (max-width: 768px) {
+    .register-card {
+      padding: 2.1rem 1.8rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .register-actions button,
+    .login-row .login-link {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .login-row {
+      justify-content: center;
+      text-align: center;
+      gap: 0.6rem;
+    }
+
+    .login-row .login-label {
+      width: 100%;
+    }
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+</style>
+
+<section class="register-wrapper">
+  <div class="register-card">
+    <header class="register-header">
+      <h1>Crear cuenta</h1>
+      <p>Complete el formulario para registrarse en el sistema.</p>
+    </header>
+
+    <form method="post" class="register-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="error-messages">
+          {% for error in form.non_field_errors %}
+            <p class="error">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <fieldset class="register-section">
+        <legend>Información personal</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="{{ form.first_name.id_for_label }}">Nombre</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+              <div class="error-messages">
+                {% for error in form.first_name.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="form-field">
+            <label for="{{ form.last_name.id_for_label }}">Apellido</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+              <div class="error-messages">
+                {% for error in form.last_name.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="form-field">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="error-messages">
+                {% for error in form.email.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if form.email.help_text %}
+              <small class="help-text">{{ form.email.help_text }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-field form-field--full">
+            <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <div class="error-messages">
+                {% for error in form.username.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if form.username.help_text %}
+              <small class="help-text">{{ form.username.help_text }}</small>
+            {% endif %}
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="register-section">
+        <legend>Cargos</legend>
+        <div class="form-grid">
+          <div class="form-field form-field--full">
+            <label for="{{ form.roles.id_for_label }}">Cargos</label>
+            {{ form.roles }}
+            {% if form.roles.errors %}
+              <div class="error-messages">
+                {% for error in form.roles.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="help-text">Selecciona todos los cargos que desempeñas.</small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="register-section" id="courses-container" hidden>
+        <legend>Cursos a cargo</legend>
+        <div class="form-grid">
+          <div class="form-field form-field--full">
+            <label for="{{ form.courses.id_for_label }}">Cursos a cargo</label>
+            {{ form.courses }}
+            {% if form.courses.errors %}
+              <div class="error-messages">
+                {% for error in form.courses.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="help-text">Selecciona los cursos donde realizas clases.</small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="register-section" id="subjects-container" hidden>
+        <legend>Asignaturas que imparte</legend>
+        <div class="form-grid">
+          <div class="form-field form-field--full">
+            <label for="{{ form.subjects.id_for_label }}">Asignaturas que imparte</label>
+            {{ form.subjects }}
+            {% if form.subjects.errors %}
+              <div class="error-messages">
+                {% for error in form.subjects.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="help-text">Selecciona una o varias asignaturas disponibles para los cursos elegidos.</small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="register-section">
+        <legend>Seguridad</legend>
+        <div class="form-grid form-grid--secure">
+          <div class="form-field">
+            <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+            <div class="password-input">
+              {{ form.password1 }}
+              <button type="button" class="password-toggle" data-target="{{ form.password1.id_for_label }}" aria-label="Mostrar contraseña" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path class="password-toggle__eye" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                  <circle class="password-toggle__pupil" cx="12" cy="12" r="3.5" />
+                  <path class="password-toggle__slash" d="M5 5l14 14" />
+                </svg>
+              </button>
+            </div>
+            {% if form.password1.errors %}
+              <div class="error-messages">
+                {% for error in form.password1.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if form.password1.help_text %}
+              <small class="help-text">{{ form.password1.help_text|safe }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-field">
+            <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+            <div class="password-input">
+              {{ form.password2 }}
+              <button type="button" class="password-toggle" data-target="{{ form.password2.id_for_label }}" aria-label="Mostrar contraseña" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path class="password-toggle__eye" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                  <circle class="password-toggle__pupil" cx="12" cy="12" r="3.5" />
+                  <path class="password-toggle__slash" d="M5 5l14 14" />
+                </svg>
+              </button>
+            </div>
+            {% if form.password2.errors %}
+              <div class="error-messages">
+                {% for error in form.password2.errors %}
+                  <p class="error">{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if form.password2.help_text %}
+              <small class="help-text">{{ form.password2.help_text|safe }}</small>
+            {% endif %}
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="register-actions">
+        <button type="submit">Crear cuenta</button>
+        <div class="login-row">
+          <span class="login-label">¿Ya tienes una cuenta?</span>
+          <a href="/cuentas/login/" class="login-link">Iniciar sesión</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+{{ registration_metadata|json_script:"registration-metadata" }}
+<script src="{% static 'js/registration.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const metadataElement = document.getElementById('registration-metadata');
+    let metadata = null;
+    if (metadataElement) {
+      try {
+        metadata = JSON.parse(metadataElement.textContent);
+      } catch (error) {
+        console.error('No se pudo parsear registration-metadata', error);
+      }
+    }
+
+    if (metadata && typeof window.initDynamicRegistrationForm === 'function') {
+      window.initDynamicRegistrationForm({
+        rolesSelector: '#id_roles',
+        coursesSelector: '#id_courses',
+        subjectsSelector: '#id_subjects',
+        coursesContainerSelector: '#courses-container',
+        subjectsContainerSelector: '#subjects-container',
+        metadata: metadata,
+      });
+    }
+
+    document.querySelectorAll('.password-input').forEach(function (container) {
+      const input = container.querySelector('input');
+      const button = container.querySelector('.password-toggle');
+      if (!input || !button) {
+        return;
+      }
+
+      const svg = button.querySelector('svg');
+      const slash = svg ? svg.querySelector('.password-toggle__slash') : null;
+
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        const reveal = input.getAttribute('type') === 'password';
+        const newType = reveal ? 'text' : 'password';
+
+        input.setAttribute('type', newType);
+        input.type = newType;
+        input.classList.toggle('password-visible', reveal);
+        input.style.webkitTextSecurity = reveal ? 'none' : 'disc';
+        input.style.MozTextSecurity = reveal ? 'none' : 'disc';
+
+        button.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+        button.classList.toggle('is-visible', reveal);
+        button.setAttribute('aria-label', reveal ? 'Ocultar contraseña' : 'Mostrar contraseña');
+
+        if (slash) {
+          slash.style.display = reveal ? 'block' : 'none';
+        }
+
+        try {
+          input.focus({ preventScroll: true });
+        } catch (err) {
+          input.focus();
+        }
+        try {
+          const length = input.value.length;
+          input.setSelectionRange(length, length);
+        } catch (err) {
+          /* ignore */
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
